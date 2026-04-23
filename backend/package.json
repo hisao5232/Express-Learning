@@ -1,12 +1,18 @@
 {
-  "name": "express-learning",
+  "name": "express-learning-backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Express learning backend with Docker",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js",
+    "dev": "npx nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
+  "keywords": [
+    "express",
+    "node",
+    "learning"
+  ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",

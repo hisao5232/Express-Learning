@@ -1,11 +1,23 @@
 services:
+  frontend:
+    build: ./frontend
+    container_name: express-learning-frontend
+    ports:
+      - "3001:3000" # ホストの3001番をコンテナの3000番に繋ぐ
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - WATCHPACK_POLLING=true # Windows環境でのホットリロードを安定させる
+
   app:
     build: ./backend
     container_name: express-learning-backend
     ports:
       - "3000:3000"
     volumes:
-      - .:/app
+      - ./backend:/app
       - /app/node_modules
     environment:
       - NODE_ENV=development

@@ -12,4 +12,4 @@ RUN npm install
 COPY . .
 
 # サーバーを起動
-CMD ["npx", "nodemon", "index.js"]
+CMD ["npm", "run", "dev"]
