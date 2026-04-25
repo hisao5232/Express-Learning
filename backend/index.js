@@ -28,26 +28,30 @@ const initDB = async () => {
 };
 initDB();
 
+// URLから動画IDを抽出する関数を追加
+function extractVideoId(url) {
+  const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[7].length === 11) ? match[7] : null;
+}
+
 // --- APIエンドポイント ---
 
 // 1. 動画を登録するAPI (CREATE)
 app.post('/api/videos', async (req, res) => {
   const { url, title } = req.body;
+  const videoId = extractVideoId(url); // IDを抽出
 
-  // 簡単なバリデーション（URLがない場合はエラーを返す）
-  if (!url) {
-    return res.status(400).json({ error: "URLは必須です" });
+  if (!url || !videoId) {
+    return res.status(400).json({ error: "有効なYouTube URLが必要です" });
   }
 
   try {
-    // $1, $2 を使うことで「SQLインジェクション」という攻撃を防ぐ（安全な書き方）
     const result = await pool.query(
-      'INSERT INTO videos (url, title) VALUES ($1, $2) RETURNING *',
-      [url, title]
+      'INSERT INTO videos (url, title, video_id) VALUES ($1, $2, $3) RETURNING *',
+      [url, title, videoId]
     );
-    
-    // 登録されたデータをクライアント（Next.js）に返す
-    res.status(201).json(result.rows[0]); 
+    res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "サーバー側で保存に失敗しました" });
@@ -63,6 +67,27 @@ app.get('/api/videos', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "データ取得に失敗しました" });
+  }
+});
+
+// --- 動画を削除するAPI (DELETE) ---
+app.delete('/api/videos/:id', async (req, res) => {
+  const { id } = req.params; // URLの末尾からIDを取得
+
+  try {
+    const result = await pool.query(
+      'DELETE FROM videos WHERE id = $1 RETURNING *',
+      [id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "動画が見つかりませんでした" });
+    }
+
+    res.json({ message: "削除に成功しました", deletedVideo: result.rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "削除処理に失敗しました" });
   }
 });
 
