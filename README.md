@@ -1,53 +1,63 @@
-# Express Learning App
+# Performance Archive
 
-JavaScript 初心者のための Express 学習用ウェブアプリ開発プロジェクトです。
-Docker Compose を使用して、バックエンド（Express）とデータベース（PostgreSQL）の環境を簡単に構築できます。
+サッカーや筋トレのパフォーマンス向上を目的とした、YouTube動画管理・分析用ウェブアプリケーションです。
+旧称 express-learning から進化し、現在は Cloudflare Workers と D1 を活用したフルスタック・サーバーレス構成で運用されています。
 
 ## 概要
 
-このプロジェクトは、Node.js の軽量フレームワークである **Express** を使用したサーバー開発の基礎を学ぶためのものです。将来的にフロントエンド（React/Next.js 等）との連携も想定したディレクトリ構成になっています。
+このプロジェクトは、YouTubeの動画URLを登録し、自分専用のトレーニング・ライブラリを構築するためのツールです。
+建設機械修理エンジニアとしての技術力と、趣味のサッカー（ウイング/サイドハーフ）での知見を融合させ、**「無機質でプロフェッショナルなジム」**のようなUI/UXを目指して開発しています。
 
 ## 技術スタック
 
-- **Backend:** Node.js, Express
-- **Database:** PostgreSQL 16
-- **Infrastructure:** Docker, Docker Compose
+- **frontend:** Next.js (App Router), Tailwind CSS v4
+- **Backend:** Hono (TypeScript), Cloudflare Workers
+- **Database:** Cloudflare D1 (SQLite-based)
+- **Infrastructure:** Cloudflare Pages, Cloudflare Workers
 
 ## ディレクトリ構成
 
 ```text
-express-learning/
-├── backend/            # Express アプリケーション本体
-│   ├── index.js        # サーバーのエントリーポイント
-│   ├── Dockerfile      # バックエンド用 Docker 設計図
-│   └── package.json    # プロジェクト設定・依存ライブラリ管理
-├── docker-compose.yml  # 全コンテナの実行設定
-└── .gitignore          # Git 管理除外設定
+performance-archive/
+├── frontend/         # Next.js アプリケーション (Cloudflare Pages)
+├── backend/          # Hono アプリケーション (Cloudflare Workers)
+│   ├── src/index.ts  # API エントリーポイント
+│   ├── schema.sql    # D1 データベース設計図
+│   └── wrangler.jsonc # Cloudflare デプロイ設定
+├── archive/          # 旧 Docker / Express 構成のバックアップ
+└── .gitignore        # .wrangler 等の管理除外設定
 ```
 
 ## セットアップと起動方法
 前提条件
-- Docker Desktop がインストールされていること
+- Node.js (v18以上)
+- Cloudflare アカウント
 
-手順
-- このリポジトリをクローンします。
-
-- プロジェクトのルートディレクトリで以下のコマンドを実行します。
+開発用サーバーの起動
+1. バックエンドの起動
 
 ```Bash
-docker compose up -d
+cd backend
+npm run dev
 ```
-以下の URL にアクセスして動作を確認します。
+(http://localhost:8787 で API が待機します)
 
-- http://localhost:3000 (Hello Express!)
+2. フロントエンドの起動
 
-- http://localhost:3000/about (JSON レスポンス)
+```Bash
+cd frontend
+npm run dev
+```
+(http://localhost:3000 で管理画面が開きます)
 
-## 今後の学習予定
-- [ ] REST API の実装（GET, POST, PUT, DELETE）
+## 主要機能
+- [x] YouTube URL からの動画ID自動抽出・埋め込み再生
 
-- [ ] PostgreSQL との連携（CRUD 操作）
+- [x] Cloudflare D1 によるデータの永続化（CRUD対応）
 
-- [ ] Frontend（React 等）の追加と API 通信
+- [x] スポーツジムをイメージした無機質で高コントラストな UI
 
-- [ ] ユーザー認証の実装
+- [x] TypeScript による型安全なフルスタック開発
+
+## 運用ドメイン
+- go-pro-world.net (Since 2025)
