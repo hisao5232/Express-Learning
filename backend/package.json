@@ -1,24 +1,16 @@
 {
-  "name": "express-learning-backend",
-  "version": "1.0.0",
-  "description": "Express learning backend with Docker",
-  "main": "index.js",
+  "name": "backend",
+  "type": "module",
   "scripts": {
-    "start": "node index.js",
-    "dev": "npx nodemon index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy --minify",
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings"
   },
-  "keywords": [
-    "express",
-    "node",
-    "learning"
-  ],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
-    "cors": "^2.8.6",
-    "express": "^5.2.1",
-    "pg": "^8.20.0"
+    "hono": "^4.12.15"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260425.1",
+    "wrangler": "^4.4.0"
   }
 }

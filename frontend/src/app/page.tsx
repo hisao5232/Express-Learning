@@ -24,7 +24,7 @@ export default function YouTubeManager() {
   const fetchVideos = async () => {
     try {
       // ネットワーク不安定時のための対策（localhost -> 127.0.0.1）
-      const res = await fetch('http://127.0.0.1:3000/api/videos');
+      const res = await fetch('http://127.0.0.1:8787/api/videos');
       const data = await res.json();
       
       // データが配列であることを確認してからセットする
@@ -45,12 +45,12 @@ export default function YouTubeManager() {
   }, []);
 
   // --- 2. 登録ボタンを押した時の処理 ---
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault(); // ページのリロードを防ぐ
     setLoading(true);
 
     try {
-      const res = await fetch('http://127.0.0.1:3000/api/videos', {
+      const res = await fetch('http://127.0.0.1:8787/api/videos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url, title }),
@@ -76,7 +76,7 @@ export default function YouTubeManager() {
     if (!confirm('この動画を削除してもよろしいですか？（この操作は取り消せません）')) return;
 
     try {
-      const res = await fetch(`http://127.0.0.1:3000/api/videos/${id}`, {
+      const res = await fetch(`http://127.0.0.1:8787/api/videos/${id}`, {
         method: 'DELETE',
       });
 
@@ -94,7 +94,7 @@ export default function YouTubeManager() {
     // 全体の背景をコンクリート風の薄いグレーに (bg-slate-100)
     <div className="min-h-screen bg-slate-100 text-slate-900 font-sans flex flex-col">
       {/* メインコンテンツエリア */}
-      <div className="flex-grow max-w-7xl mx-auto w-full py-12 px-4 sm:px-6 lg:px-8">
+      <div className="grow max-w-7xl mx-auto w-full py-12 px-4 sm:px-6 lg:px-8">
         
         {/* ヘッダー：無機質なスチール風のデザイン */}
         <header className="border-b-4 border-black pb-6 mb-12 flex items-center justify-between">

@@ -23,3 +23,16 @@ Thumbs.db
 # Dockerのデータ
 # db-data フォルダがルートにある場合は除外
 db-data/
+
+# Cloudflare Workers / Wrangler
+.wrangler/
+dist/
+.dev.vars
+
+# Node.js
+node_modules/
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
