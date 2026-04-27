@@ -23,8 +23,7 @@ export default function YouTubeManager() {
   // --- 1. 動画一覧を取得する関数 ---
   const fetchVideos = async () => {
     try {
-      // ネットワーク不安定時のための対策（localhost -> 127.0.0.1）
-      const res = await fetch('http://127.0.0.1:8787/api/videos');
+      const res = await fetch('https://backend.hisao52321983.workers.dev/api/videos');
       const data = await res.json();
       
       // データが配列であることを確認してからセットする
@@ -50,7 +49,7 @@ export default function YouTubeManager() {
     setLoading(true);
 
     try {
-      const res = await fetch('http://127.0.0.1:8787/api/videos', {
+      const res = await fetch('https://backend.hisao52321983.workers.dev/api/videos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url, title }),
@@ -76,7 +75,7 @@ export default function YouTubeManager() {
     if (!confirm('この動画を削除してもよろしいですか？（この操作は取り消せません）')) return;
 
     try {
-      const res = await fetch(`http://127.0.0.1:8787/api/videos/${id}`, {
+      const res = await fetch(`https://backend.hisao52321983.workers.dev/api/videos/${id}`, {
         method: 'DELETE',
       });
 
