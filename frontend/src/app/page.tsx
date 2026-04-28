@@ -7,26 +7,23 @@ interface Video {
   id: number;
   url: string;
   title: string;
-  video_id: string; // YouTubeの動画ID
+  video_id: string; 
   created_at: string;
 }
 
 export default function YouTubeManager() {
-  // 入力フォームの状態管理
   const [url, setUrl] = useState('');
   const [title, setTitle] = useState('');
-  // 取得した動画リストの状態管理
   const [videos, setVideos] = useState<Video[]>([]);
-  // 送信中の状態管理（連打防止）
   const [loading, setLoading] = useState(false);
+  // タイトル取得中の状態管理
+  const [fetchingTitle, setFetchingTitle] = useState(false);
 
-  // --- 1. 動画一覧を取得する関数 ---
+  // --- 動画一覧を取得する関数 ---
   const fetchVideos = async () => {
     try {
       const res = await fetch('https://video-arc-backend.hisao52321983.workers.dev/api/videos');
       const data = await res.json();
-      
-      // データが配列であることを確認してからセットする
       if (Array.isArray(data)) {
         setVideos(data);
       } else {
@@ -38,14 +35,42 @@ export default function YouTubeManager() {
     }
   };
 
-  // 画面が表示された時に一覧を取得
   useEffect(() => {
     fetchVideos();
   }, []);
 
-  // --- 2. 登録ボタンを押した時の処理 ---
+  // --- 【新規】YouTubeからタイトルを自動取得する関数 ---
+  const fetchYouTubeTitle = async (inputUrl: string) => {
+    // YouTubeのURL形式かチェック
+    if (inputUrl.includes("youtube.com/") || inputUrl.includes("youtu.be/")) {
+      setFetchingTitle(true);
+      try {
+        // YouTube oEmbed API を使用
+        const response = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(inputUrl)}&format=json`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.title) {
+            setTitle(data.title); // タイトル入力欄に自動セット
+          }
+        }
+      } catch (err) {
+        console.error('タイトル取得失敗:', err);
+      } finally {
+        setFetchingTitle(false);
+      }
+    }
+  };
+
+  // --- URL入力時の処理 ---
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newUrl = e.target.value;
+    setUrl(newUrl);
+    fetchYouTubeTitle(newUrl); // 入力されるたびにタイトル取得を試みる
+  };
+
+  // --- 登録ボタンを押した時の処理 ---
   const handleSubmit = async (e: React.SyntheticEvent) => {
-    e.preventDefault(); // ページのリロードを防ぐ
+    e.preventDefault();
     setLoading(true);
 
     try {
@@ -56,9 +81,9 @@ export default function YouTubeManager() {
       });
 
       if (res.ok) {
-        setUrl('');   // 入力欄を空にする
+        setUrl('');
         setTitle('');
-        fetchVideos(); // 一覧を再更新
+        fetchVideos();
       } else {
         const errorData = await res.json();
         alert(`エラー: ${errorData.error}`);
@@ -70,9 +95,9 @@ export default function YouTubeManager() {
     }
   };
 
-  // --- 3. 削除ボタンを押した時の処理 ---
+  // --- 削除ボタンを押した時の処理 ---
   const handleDelete = async (id: number) => {
-    if (!confirm('この動画を削除してもよろしいですか？（この操作は取り消せません）')) return;
+    if (!confirm('この動画を削除してもよろしいですか？')) return;
 
     try {
       const res = await fetch(`https://video-arc-backend.hisao52321983.workers.dev/api/videos/${id}`, {
@@ -80,7 +105,7 @@ export default function YouTubeManager() {
       });
 
       if (res.ok) {
-        fetchVideos(); // リストを更新して画面から消す
+        fetchVideos();
       } else {
         alert('削除に失敗しました');
       }
@@ -90,12 +115,9 @@ export default function YouTubeManager() {
   };
 
   return (
-    // 全体の背景をコンクリート風の薄いグレーに (bg-slate-100)
     <div className="min-h-screen bg-slate-100 text-slate-900 font-sans flex flex-col">
-      {/* メインコンテンツエリア */}
       <div className="grow max-w-7xl mx-auto w-full py-12 px-4 sm:px-6 lg:px-8">
         
-        {/* ヘッダー：無機質なスチール風のデザイン */}
         <header className="border-b-4 border-black pb-6 mb-12 flex items-center justify-between">
           <h1 className="text-4xl font-extrabold tracking-tighter text-black uppercase">
             Performance <span className="font-light text-slate-500">Archive</span>
@@ -105,10 +127,8 @@ export default function YouTubeManager() {
           </div>
         </header>
 
-        {/* 2カラムレイアウト（フォームとリスト） */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           
-          {/* 左側：登録フォーム（無機質なボックス） */}
           <div className="lg:col-span-1">
             <form onSubmit={handleSubmit} className="bg-white p-8 border border-slate-300 rounded-sm shadow-inner space-y-6 sticky top-8">
               <h2 className="text-xl font-bold uppercase tracking-tight border-l-4 border-black pl-3 mb-6 text-black">
@@ -116,34 +136,34 @@ export default function YouTubeManager() {
               </h2>
               
               <div>
-                <label className="block text-xs font-mono uppercase text-slate-600 mb-1">Title</label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  // 入力欄を角張らせ、ボーダーを強調 (rounded-none border-slate-400)
-                  className="block w-full rounded-none border-2 border-slate-400 p-3 text-black focus:border-black focus:ring-0 placeholder-slate-400 font-medium" 
-                  placeholder="EX: CORE TRAINING"
-                  required
-                />
-              </div>
-              
-              <div>
                 <label className="block text-xs font-mono uppercase text-slate-600 mb-1">YouTube URL</label>
                 <input
                   type="url"
                   value={url}
-                  onChange={(e) => setUrl(e.target.value)}
+                  onChange={handleUrlChange} // ここを新しいハンドラに変更
                   className="block w-full rounded-none border-2 border-slate-400 p-3 text-black focus:border-black focus:ring-0 placeholder-slate-400 font-medium"
                   placeholder="https://youtu.be/..."
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono uppercase text-slate-600 mb-1">
+                  Title {fetchingTitle && <span className="text-blue-600 normal-case animate-pulse ml-2">(Fetching...)</span>}
+                </label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="block w-full rounded-none border-2 border-slate-400 p-3 text-black focus:border-black focus:ring-0 placeholder-slate-400 font-medium" 
+                  placeholder={fetchingTitle ? "Waiting for YouTube..." : "EX: CORE TRAINING"}
                   required
                 />
               </div>
               
               <button
                 type="submit"
-                disabled={loading}
-                // ボタンを真黒、角張らせる (bg-black rounded-none)
+                disabled={loading || !title} // タイトルがない間は押せないように
                 className="w-full py-4 bg-black text-white font-bold uppercase tracking-widest rounded-none hover:bg-slate-800 transition disabled:bg-slate-400 text-sm"
               >
                 {loading ? 'Processing...' : 'Register Video'}
@@ -151,7 +171,6 @@ export default function YouTubeManager() {
             </form>
           </div>
 
-          {/* 右側：動画グリッド表示（2列） */}
           <div className="lg:col-span-2">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {videos.length === 0 ? (
@@ -160,10 +179,8 @@ export default function YouTubeManager() {
                 </div>
               ) : (
                 videos.map((video) => (
-                  // カード：白背景、角張ったデザイン (bg-white rounded-none border)
                   <div key={video.id} className="relative border border-slate-300 rounded-none overflow-hidden shadow-sm bg-white group hover:border-slate-500 transition-colors">
                     
-                    {/* 削除ボタン：無機質なグレーのゴミ箱、ホバーで赤く (bg-slate-200 text-slate-600) */}
                     <button
                       onClick={() => handleDelete(video.id)}
                       className="absolute top-2 right-2 z-10 bg-slate-200 text-slate-600 p-1.5 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 hover:text-white shadow"
@@ -174,7 +191,6 @@ export default function YouTubeManager() {
                       </svg>
                     </button>
 
-                    {/* 埋め込みプレイヤー */}
                     <div className="aspect-video bg-black border-b border-slate-300">
                       {video.video_id ? (
                         <iframe
@@ -191,11 +207,9 @@ export default function YouTubeManager() {
                     </div>
                     
                     <div className="p-5">
-                      {/* タイトル：太字、黒 (text-black font-extrabold) */}
                       <h3 className="font-extrabold text-black text-lg truncate mb-1 uppercase tracking-tight">
                         {video.title}
                       </h3>
-                      {/* URL：細字、グレー (text-slate-500 font-light) */}
                       <p className="text-xs text-slate-500 truncate font-light font-mono">
                         ID: {video.video_id || 'N/A'} | {video.url}
                       </p>
@@ -208,7 +222,6 @@ export default function YouTubeManager() {
         </div>
       </div>
 
-      {/* フッター：go-pro-world.net since 2025 を追加 */}
       <footer className="w-full bg-black text-slate-400 py-6 mt-16 border-t-2 border-slate-700">
         <div className="max-w-7xl mx-auto px-4 text-center font-mono text-xs tracking-wider">
           &copy; {new Date().getFullYear()} <span className="text-white">GO-PRO-WORLD.NET</span> | Since 2025 | All Rights Reserved.
