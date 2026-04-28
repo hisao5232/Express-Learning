@@ -1,6 +1,6 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "backend",
+	"name": "video-arc-backend",
 	"main": "src/index.ts",
 	"compatibility_date": "2026-04-25",
 	"d1_databases": [
@@ -9,7 +9,10 @@
 			"database_name": "my-video-db",
 			"database_id": "61fc983e-541f-48c5-a56c-1bac50bbf808"
 		}
-	]
+	],
+	"triggers": {
+    	"crons": ["30 20 * * *"] // (UTC)
+  	}
 	// "compatibility_flags": [
 	//   "nodejs_compat"
 	// ],
