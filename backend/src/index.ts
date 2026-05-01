@@ -28,18 +28,46 @@ function extractVideoId(url: string): string | null {
   return (match && match[7].length === 11) ? match[7] : null;
 }
 
-// Discord通知用の関数
+// Discord通知用の関数（エラーハンドリングを強化）
 async function sendDiscordNotification(env: Bindings) {
   const webhookUrl = env.DISCORD_WEBHOOK_URL;
+
+  // 1. Webhook URL が存在するかチェック
+  if (!webhookUrl) {
+    console.error("❌ エラー: DISCORD_WEBHOOK_URL が設定されていません。wrangler secret put で設定してください。");
+    return;
+  }
+
   const message = {
     content: "📢 今日のトレーニング動画をチェックしましょう！\nhttps://video-log.go-pro-world.net"
   };
 
-  await fetch(webhookUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(message),
-  });
+  try {
+    console.log("🚀 Discord への通知送信を開始します...");
+    
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(message),
+    });
+
+    // 2. Discord 側がエラー（4xx, 5xx）を返した場合のチェック
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Discord API エラー: ステータス ${response.status} - ${errorText}`);
+    }
+
+    console.log("✅ Discord 通知の送信に成功しました。");
+  } catch (error) {
+    // 3. 通信エラーやコードミスなど、あらゆるエラーをここでキャッチしてログに出力
+    console.error("❌ Discord 通知送信中に例外が発生しました:");
+    if (error instanceof Error) {
+      console.error(`メッセージ: ${error.message}`);
+      console.error(`スタックトレース: ${error.stack}`);
+    } else {
+      console.error(`不明なエラー: ${JSON.stringify(error)}`);
+    }
+  }
 }
 
 // --- API ルート定義 ---
@@ -115,11 +143,18 @@ app.delete('/api/videos/:id', async (c) => {
 
 // この設定を Cloudflare Workers のエントリーポイントとしてエクスポートします。
 export default {
-  // 通常のAPIリクエスト（HTTP）
+  // 通常のAPIリクエスト（HTTP）の処理
   fetch: app.fetch,
 
-  // 定時実行（Cron）
+  // 定時実行（Cron）の処理
   async scheduled(event: any, env: Bindings, ctx: any) {
+    console.log(`⏰ Cron トリガーが実行されました (イベント時間: ${new Date(event.scheduledTime).toLocaleString('ja-JP')})`);
+    
+    /**
+     * ctx.waitUntil を使う理由:
+     * 非同期処理（通知送信）が終わる前に Worker が終了してしまうのを防ぎ、
+     * 最後まで処理を完遂させるために必要です。
+     */
     ctx.waitUntil(sendDiscordNotification(env));
   },
 };
